@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+}
+
+group 'com.cucumber'
+version '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+dependencies {
+    testImplementation(platform("org.junit:junit-bom:5.9.1"))
+    testImplementation(platform("io.cucumber:cucumber-bom:7.9.0"))
+
+    testImplementation("io.cucumber:cucumber-java")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine")
+    testImplementation("org.junit.platform:junit-platform-suite")
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.5.3'
+}
+
+test {
+    useJUnitPlatform()
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    systemProperty("cucumber.plugin", "message:build/reports/cucumber.ndjson, timeline:build/reports/timeline, html:build/reports/cucumber.html")
+}
+
+task cucumber(type: JavaExec) {
+    dependsOn assemble, compileTestJava
+    systemProperty('envcu', System.properties['envcu'] ?: 'dev')
+    main = "io.cucumber.core.cli.Main"
+    classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+    args = ['--plugin', 'pretty','--plugin','html:cucumber/report.html','--plugin', 'json:cucumber/report.json','--glue', 'com.cucumber', 'src/test/resources/com/cucumber']
+}
+
